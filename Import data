@@ -1,0 +1,114 @@
+### -------------------------------------------------------------------- ###
+### ---------------------  Set initial parameters  --------------------- ###
+### -------------------------------------------------------------------- ###
+
+
+age.ratio <- read.csv(file = "data/age-ratio.csv", header = T)
+age.group <- 6
+year <- 7
+time.step <- 12*year # each step stands for one month
+nPU <- 4815
+Study.area <- 4815*9
+PU = read.csv(file = "data/PU with neighours.csv") 
+PU.bound = subset(PU, PU$V12!=4)
+PU.bound.id = PU.bound$PUID  #Identify boundary PUs
+dat = read.csv(file = "MPA/Marxansolution.csv") #import marxan solutions
+colnames(dat)[2]<-"solution"
+
+
+### -------------------------------------------------------------------- ###
+### -----------------------  Population dynamics  ---------------------- ###
+### -------------------------------------------------------------------- ###
+
+# 4 dimensions, stands for (age, time-step, PUID, iteration), only for those age-structured parameters 
+
+load(file="data/age-structured data2011.Rdata")
+
+
+Mat <- SSD.variable(Name="Mat",object = matrix(para.age$mat,nrow = age.group,ncol = time.step),
+                    dim=c(age.group,time.step,nPU),
+                    dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+sel <- SSD.variable(Name="Sel",object = matrix(para.age$sel,nrow = age.group,ncol = time.step),
+                    dim=c(age.group,time.step,nPU),
+                    dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+weight <- SSD.variable(Name="weight",object = matrix(para.age$weight,nrow = age.group,ncol = time.step),
+                       dim=c(age.group,time.step,nPU),
+                       dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+load(file="data/Initial inputs/stock.n.Rdata")
+
+M <- SSD.variable(Name="M",object = matrix(NA,nrow = age.group,ncol = time.step),
+                  dim=c(age.group,time.step,nPU),
+                  dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+Ftotal <- SSD.variable(Name="Ftotal",object = matrix(NA,nrow = 1,ncol = time.step),
+                       dim=c(1,time.step,1),
+                       dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=seq(1)))
+
+effort <- SSD.variable(Name="effort",object = matrix(NA,nrow = 1,ncol = time.step),
+                       dim=c(1,time.step,nPU),
+                       dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
+
+solution <- dat$solution
+PU$fishing <- 1-solution
+temp <- subset(PU,subset = PU$fishing==0)
+
+for(i in 1:4815){
+  if(i %in% temp$PUID){
+    effort@Data[1,1,i]<-0
+  } else{
+    effort@Data[1,1,i]<- 0.74*(3/2)*(4815/(4815-128)) #change MPA size: exsiting: 209; S1-124; S2:196; S3:128
+  }
+}
+
+
+Fm <- SSD.variable(Name="Fm",object = matrix(NA,nrow = age.group,ncol = time.step),
+                   dim=c(age.group,time.step,nPU),
+                   dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+catch.n <- SSD.variable(Name="catch.n",object = matrix(NA,nrow = age.group,ncol = time.step),
+                        dim=c(age.group,time.step,nPU),
+                        dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+emi <- SSD.variable(Name="emi",object = matrix(NA,nrow = age.group,ncol = time.step),
+                    dim=c(age.group,time.step,nPU),
+                    dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+emi.side <- SSD.variable(Name="emi.side",object = matrix(NA,nrow = age.group,ncol = time.step),
+                         dim=c(age.group,time.step,nPU),
+                         dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+emi.bound <- SSD.variable(Name="emi.bound",object = matrix(NA,nrow = age.group,ncol = time.step),
+                          dim=c(age.group,time.step,272),
+                          dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:272))
+
+immi <- SSD.variable(Name="immi",object = matrix(NA,nrow = age.group,ncol = time.step),
+                     dim=c(age.group,time.step,nPU),
+                     dimnames=list(age=seq(1:age.group),time.step=seq(1:time.step),PUID=1:nPU))
+
+
+catch <- SSD.variable(Name="catch",object = matrix(NA,nrow = 1,ncol = time.step),
+                      dim=c(1,time.step,nPU),
+                      dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
+
+biomass<- SSD.variable(Name="biomass",object = matrix(NA,nrow = 1,ncol = time.step),
+                       dim=c(1,time.step,nPU),
+                       dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
+
+ssb <- SSD.variable(Name="ssb",object = matrix(NA,nrow = 1,ncol = time.step),
+                    dim=c(1,time.step,nPU),
+                    dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
+
+R <- SSD.variable(Name="R",object = matrix(NA,nrow = 1,ncol = time.step),
+                  dim=c(1,time.step,nPU),
+                  dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
+
+### -------------------------------------------------------------------- ###
+### -----------------------  Fleet dynamics  ---------------------- ###
+### -------------------------------------------------------------------- ###
+
+CPUE <- SSD.variable(Name="CPUE",object = matrix(NA,nrow = 1,ncol = time.step),
+                     dim=c(1,time.step,nPU),
+                     dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
