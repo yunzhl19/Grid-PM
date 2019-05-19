@@ -14,7 +14,9 @@ PU.bound = subset(PU, PU$V12!=4)
 PU.bound.id = PU.bound$PUID  #Identify boundary PUs
 dat = read.csv(file = "MPA/Marxansolution.csv") #import marxan solutions
 colnames(dat)[2]<-"solution"
-
+solution <- dat$solution
+PU$fishing <- 1-solution
+temp <- subset(PU,subset = PU$fishing==0)
 
 ### -------------------------------------------------------------------- ###
 ### -----------------------  Population dynamics  ---------------------- ###
@@ -51,9 +53,6 @@ effort <- SSD.variable(Name="effort",object = matrix(NA,nrow = 1,ncol = time.ste
                        dim=c(1,time.step,nPU),
                        dimnames=list(age=seq(1),time.step=seq(1:time.step),PUID=1:nPU))
 
-solution <- dat$solution
-PU$fishing <- 1-solution
-temp <- subset(PU,subset = PU$fishing==0)
 
 for(i in 1:4815){
   if(i %in% temp$PUID){
