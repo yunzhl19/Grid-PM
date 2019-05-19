@@ -1,0 +1,48 @@
+### SSD.variable
+
+setClass("SSD.variable", 
+         representation(Name="character",Data="array"),
+         prototype=list(Name="NA",Data=array(as.numeric(NA),dim=c(1,1,1),
+                                             dimnames=list(age="numeric",time.step="numeric",PUID="numeric"))),
+         # prototype(new('array', array(as.numeric(NA),dim=c(1,1,1,1),
+         #                              dimnames=list(age="numeric",time.step="numeric",PUID="numeric",iter="numeric")))),
+         # validation
+         validity=function(object){
+           DimNames  <-  names(dimnames(object@Data))
+           if (length(DimNames) != 3)  {return("the array must have 3 dimensions")}
+           # "age", "time.step", "PUID","iter"
+           if (!all(DimNames == c("age", "time.step", "PUID"))) {return("dimension names of the array are incorrect")}
+           # if (!is.numeric(object) && !is.na(object)) {return("array is not numeric")}
+           # Everything is fine
+           return(TRUE)
+         }
+)
+
+setGeneric("SSD.variable", function(object, ...) standardGeneric("SSD.variable"))
+
+setMethod("SSD.variable", signature(object="array"),
+          function(Name,object,  dimnames=list(age="numeric",time.step="numeric",PUID="numeric")) {
+            variable <- new("SSD.variable", Name=Name,Data=object)
+            return(variable)
+          }
+)
+
+setMethod("SSD.variable", signature(object="matrix"),
+          function(Name,object, dim, dimnames=list(age="numeric",time.step="numeric",PUID="numeric")) {
+            variable <- new("SSD.variable", Name=Name,Data=array(object, dim=dim,dimnames=dimnames))
+            return(variable)
+          }
+)
+
+
+
+### SSD.range
+SSD.range <- function(SSD.obj) {
+  range <- data.frame(Name=SSD.obj@Name,
+                      Max.Age=c(dim(SSD.obj@Data)[1]),
+                      Months=dim(SSD.obj@Data)[2],
+                      Pu.Size=dim(SSD.obj@Data)[3])
+  return(range)
+}
+
+
