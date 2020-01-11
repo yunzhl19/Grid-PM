@@ -1,0 +1,12 @@
+### input data ###
+
+Planning unit data: can be created by ArcGIS extension ET Geowizards (http://www.ian-ko.com/). See Ardron et al. 2010 for details
+Marine protected area: binary data exported from Marxan or Marxan with Zones. 
+Species distribution data: See supporting information in Li et al. paper for details
+Socio-economic cost data: could be spatially-explicit fishing effort data. This file can be obtained using Zonal Statistics as Table tool in ArcGIS
+
+References:
+Ardron JA, Possingham HP, Klein CJ. (eds). Marxan Good Practices Handbook, Version 2. 
+Pacific Marine Analysis and Research Association, Victoria, BC, Canada; 2010. 
+
+Comment below if you have any questions.
